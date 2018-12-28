@@ -719,8 +719,19 @@ class pdf_analyse_phase extends ModelePDFPropales
 				$TauxMargeBrute = (($PrixDeVente - $TD_Analyse['TD_Recap']['prmp']) / $PrixDeVente) * 100;
 				$PartMatiere = ($TD_Analyse['TD_Recap']['pvmp'] / $PrixDeVente) * 100;
 				$PartService = ($TD_Analyse['TD_Recap']['pvmo'] / $PrixDeVente) * 100;
-				$TauxMargeService = (($TD_Analyse['TD_Recap']['pvmo'] - $TD_Analyse['TD_Recap']['prmo']) / $TD_Analyse['TD_Recap']['pvmo']) * 100;
-				$TauxMargeMatiere = (($TD_Analyse['TD_Recap']['pvmp'] - $TD_Analyse['TD_Recap']['prmp']) / $TD_Analyse['TD_Recap']['pvmp']) * 100;
+				if ($TD_Analyse['TD_Recap']['pvmo'] != 0)//pour les cas ou il n'y a pas de service
+				{
+					$TauxMargeService = (($TD_Analyse['TD_Recap']['pvmo'] - $TD_Analyse['TD_Recap']['prmo']) / $TD_Analyse['TD_Recap']['pvmo']) * 100;
+				}
+				if ($TD_Analyse['TD_Recap']['pvmp'] != 0)//pour les cas ou il n'y a pas de produit
+				{
+					$TauxMargeMatiere = (($TD_Analyse['TD_Recap']['pvmp'] - $TD_Analyse['TD_Recap']['prmp']) / $TD_Analyse['TD_Recap']['pvmp']) * 100;
+				}
+				if ($TD_Analyse['TD_Recap']['nb_heures'] != 0)//pour les cas ou il n'y a pas de service
+				{
+					$PrixHeure = $TD_Analyse['TD_Recap']['pvmo'] / $TD_Analyse['TD_Recap']['nb_heures'];
+				}
+				
 				//$TauxMargeService = ($PrixDeRevientService / $PrixDeVenteService ) * 100;
 				//$TauxMargeMatiere = ($PrixDeRevientProduit / $PrixDeVenteProduit) * 100;
 				
@@ -877,7 +888,7 @@ class pdf_analyse_phase extends ModelePDFPropales
 					$myhtml.="<TABLE>";
 					$myhtml.="<TR><TD>Prix de revient</TD><TD>Part MO</TD><TD>Marge</TD><TD>Nombre d'heures</TD>";
 					$myhtml.="</TR>";
-					$myhtml.="<TR><TD>".round($TD_Analyse['TD_Recap']['prmo'], 2)."€</TD><TD>".round($TD_Analyse['TD_Recap']['pvmo'], 2)."€ soit ".round($PartService, 1)."%</TD><TD>".round(($TD_Analyse['TD_Recap']['pvmo'] - $TD_Analyse['TD_Recap']['prmo']), 2)."€ soit ".round($TauxMargeService, 1)."%</TD><TD>".$TD_Analyse['TD_Recap']['nb_heures']." h</TD>";
+					$myhtml.="<TR><TD>".round($TD_Analyse['TD_Recap']['prmo'], 2)."€</TD><TD>".round($TD_Analyse['TD_Recap']['pvmo'], 2)."€ soit ".round($PartService, 1)."%</TD><TD>".round(($TD_Analyse['TD_Recap']['pvmo'] - $TD_Analyse['TD_Recap']['prmo']), 2)."€ soit ".round($TauxMargeService, 1)."%</TD><TD>".$TD_Analyse['TD_Recap']['nb_heures']." h à ".round($PrixHeure, 2)."€</TD>";
 					$myhtml.="</TR>";
 					$myhtml.="</TABLE>";
 					
@@ -925,8 +936,18 @@ class pdf_analyse_phase extends ModelePDFPropales
 							$TauxMargeBrute = (($PrixDeVente - $TD_Analyse['TD_Phase'][$lecture_phase]['prmp']) / $PrixDeVente) * 100;
 							$PartMatiere = ($TD_Analyse['TD_Phase'][$lecture_phase]['pvmp'] / $PrixDeVente) * 100;
 							$PartService = ($TD_Analyse['TD_Phase'][$lecture_phase]['pvmo'] / $PrixDeVente) * 100;
-							$TauxMargeService = (($TD_Analyse['TD_Phase'][$lecture_phase]['pvmo'] - $TD_Analyse['TD_Phase'][$lecture_phase]['prmo']) / $TD_Analyse['TD_Phase'][$lecture_phase]['pvmo']) * 100;
-							$TauxMargeMatiere = (($TD_Analyse['TD_Phase'][$lecture_phase]['pvmp'] - $TD_Analyse['TD_Phase'][$lecture_phase]['prmp']) / $TD_Analyse['TD_Phase'][$lecture_phase]['pvmp']) * 100;
+							if ($TD_Analyse['TD_Phase'][$lecture_phase]['pvmo'] != 0)
+							{
+								$TauxMargeService = (($TD_Analyse['TD_Phase'][$lecture_phase]['pvmo'] - $TD_Analyse['TD_Phase'][$lecture_phase]['prmo']) / $TD_Analyse['TD_Phase'][$lecture_phase]['pvmo']) * 100;
+							}
+							if ($TD_Analyse['TD_Phase'][$lecture_phase]['pvmp'] != 0)
+							{
+								$TauxMargeMatiere = (($TD_Analyse['TD_Phase'][$lecture_phase]['pvmp'] - $TD_Analyse['TD_Phase'][$lecture_phase]['prmp']) / $TD_Analyse['TD_Phase'][$lecture_phase]['pvmp']) * 100;
+							}
+							if ($TD_Analyse['TD_Phase'][$lecture_phase]['nb_heures'] != 0)
+							{
+								$PrixHeure = $TD_Analyse['TD_Phase'][$lecture_phase]['pvmo'] / $TD_Analyse['TD_Phase'][$lecture_phase]['nb_heures'];
+							}
 							
 							
 							
@@ -959,7 +980,7 @@ class pdf_analyse_phase extends ModelePDFPropales
 							$myhtml.="<TABLE>";
 							$myhtml.="<TR><TD>Prix de revient</TD><TD>Part MO</TD><TD>Marge</TD><TD>Nombre d'heures</TD>";
 							$myhtml.="</TR>";
-							$myhtml.="<TR><TD>".round($TD_Analyse['TD_Phase'][$lecture_phase]['prmo'], 2)."€</TD><TD>".round($TD_Analyse['TD_Phase'][$lecture_phase]['pvmo'], 2)."€ soit ".round($PartService, 1)."%</TD><TD>".round(($TD_Analyse['TD_Phase'][$lecture_phase]['pvmo'] - $TD_Analyse['TD_Phase'][$lecture_phase]['prmo']), 2)."€ soit ".round($TauxMargeService, 1)."%</TD><TD>".$TD_Analyse['TD_Phase'][$lecture_phase]['nb_heures']." h</TD>";
+							$myhtml.="<TR><TD>".round($TD_Analyse['TD_Phase'][$lecture_phase]['prmo'], 2)."€</TD><TD>".round($TD_Analyse['TD_Phase'][$lecture_phase]['pvmo'], 2)."€ soit ".round($PartService, 1)."%</TD><TD>".round(($TD_Analyse['TD_Phase'][$lecture_phase]['pvmo'] - $TD_Analyse['TD_Phase'][$lecture_phase]['prmo']), 2)."€ soit ".round($TauxMargeService, 1)."%</TD><TD>".$TD_Analyse['TD_Phase'][$lecture_phase]['nb_heures']." h à ".round($PrixHeure, 2)."€</TD>";
 							$myhtml.="</TR>";
 							$myhtml.="</TABLE>";
 							$lecture_phase++;
