@@ -394,7 +394,8 @@ class pdf_analyse_phase extends ModelePDFPropales
 		$nbphase = 0;
 		$TD_Recap = array ('nb_heures'=>0, 'prmp'=>0, 'pvmp'=>0, 'prmo'=>0, 'pvmo'=>0);
 		$tab_prdoduit = array();
-		$TD_Phase[0] = array ('Titre'=>'', 'nb_heures'=>0, 'prmp'=>0, 'pvmp'=>0, 'prmo'=>0, 'pvmo'=>0, 'produits'=>$tab_prdoduit);
+		$tab_mo = array();
+		$TD_Phase[0] = array ('Titre'=>'', 'nb_heures'=>0, 'prmp'=>0, 'pvmp'=>0, 'prmo'=>0, 'pvmo'=>0, 'produits'=>$tab_prdoduit, 'mo'=>$tab_mo);
 		$TD_Analyse = array ('TD_Recap'=>$TD_Recap, 'TD_Phase'=>$TD_Phase);
 		
 		
@@ -420,7 +421,8 @@ class pdf_analyse_phase extends ModelePDFPropales
 		
 				$nbphase++;
 				$tab_prdoduit = array();
-				$TD_Analyse['TD_Phase'][$nbphase] = array ('Titre'=>$line->desc, 'nb_heures'=>0, 'prmp'=>0, 'pvmp'=>0, 'prmo'=>0, 'pvmo'=>0, 'Produits'=>$tab_prdoduit);
+				$tab_mo = array();
+				$TD_Analyse['TD_Phase'][$nbphase] = array ('Titre'=>$line->desc, 'nb_heures'=>0, 'prmp'=>0, 'pvmp'=>0, 'prmo'=>0, 'pvmo'=>0, 'Produits'=>$tab_prdoduit, 'mo'=>$tab_mo);
 			}
 			
 			//ligne autre que titre et total (standard)
@@ -530,7 +532,27 @@ class pdf_analyse_phase extends ModelePDFPropales
 						if ($producttype->fk_product_type == 1) //c'est un service
 						{
 							$TD_Analyse['TD_Recap']['nb_heures'] = $TD_Analyse['TD_Recap']['nb_heures'] + ($linend['qty'] * $line->qty);		
-							$TD_Analyse['TD_Phase'][$nbphase] ['nb_heures'] = $TD_Analyse['TD_Phase'][$nbphase] ['nb_heures'] + ($linend['qty'] * $line->qty);		
+							$TD_Analyse['TD_Phase'][$nbphase] ['nb_heures'] = $TD_Analyse['TD_Phase'][$nbphase] ['nb_heures'] + ($linend['qty'] * $line->qty);	
+							
+							
+							//liste MO																
+							if ( array_key_exists ( $fkp, $TD_Analyse['TD_Phase'][$nbphase]['mo'])) //test pour savoir si la ref produit est déjà présente dans le tableau
+							{
+								$q = $TD_Analyse['TD_Phase'][$nbphase]['mo'] [$fkp]['qte'] + ($linend['qty'] * $line->qty);
+								//$p = $TD_Analyse['TD_Phase'][$nbphase]['mo'] [$fkp]['prix_total'] + ($linend['price'] * $line->qty);
+								//$TD_Analyse['TD_Phase'][$nbphase]['mo'] [$fkp]= array('ref'=>$producttype->ref, 'label'=>$producttype->label, 'qte'=>$q, 'prix_total'=>$p);
+								$TD_Analyse['TD_Phase'][$nbphase]['mo'] [$fkp]= array('ref'=>$producttype->ref, 'label'=>$producttype->label, 'qte'=>$q);
+							}
+							else //le produit n'était pas présent dans le tableau
+							{
+								$q = $linend['qty'] * $line->qty;
+								//~ $p = $linend['price'] * $line->qty;
+								//~ $TD_Analyse['TD_Phase'][$nbphase]['mo'] [$fkp]= array('ref'=>$producttype->ref, 'label'=>$producttype->label, 'qte'=>$q, 'prix_total'=>$p);
+								$TD_Analyse['TD_Phase'][$nbphase]['mo'] [$fkp]= array('ref'=>$producttype->ref, 'label'=>$producttype->label, 'qte'=>$q);
+							}	
+						
+							
+								
 							if  ($linend['price'] != 0)
 							{
 								//je ne calcule pas le prix de vente, je vais le lire dans la propale
@@ -640,6 +662,22 @@ class pdf_analyse_phase extends ModelePDFPropales
 					}
 					if ($line->product_type == 1) //c'est un service
 					{	
+						//liste MO																
+							if ( array_key_exists ( $line->fk_product, $TD_Analyse['TD_Phase'][$nbphase]['mo'])) //test pour savoir si la ref produit est déjà présente dans le tableau
+							{
+								$q = $TD_Analyse['TD_Phase'][$nbphase]['mo'] [$line->fk_product]['qte'] +  $line->qty;
+								//$p = $TD_Analyse['TD_Phase'][$nbphase]['mo'] [$fkp]['prix_total'] + ($linend['price'] * $line->qty);
+								//$TD_Analyse['TD_Phase'][$nbphase]['mo'] [$fkp]= array('ref'=>$producttype->ref, 'label'=>$producttype->label, 'qte'=>$q, 'prix_total'=>$p);
+								$TD_Analyse['TD_Phase'][$nbphase]['mo'] [$fkp]= array('ref'=>$producttype->ref, 'label'=>$producttype->label, 'qte'=>$q);
+							}
+							else //le produit n'était pas présent dans le tableau
+							{
+								$q = $line->qty;
+								//~ $p = $linend['price'] * $line->qty;
+								//~ $TD_Analyse['TD_Phase'][$nbphase]['mo'] [$fkp]= array('ref'=>$producttype->ref, 'label'=>$producttype->label, 'qte'=>$q, 'prix_total'=>$p);
+								$TD_Analyse['TD_Phase'][$nbphase]['mo'] [$line->fk_product]= array('ref'=>$producttype->ref, 'label'=>$producttype->label, 'qte'=>$q);
+							}
+						
 						$TD_Analyse['TD_Recap']['pvmo'] = $TD_Analyse['TD_Recap']['pvmo'] + $line->total_ht;
 						$TD_Analyse['TD_Phase'][$nbphase]['pvmo'] = $TD_Analyse['TD_Phase'][$nbphase]['pvmo'] + $line->total_ht;
 						$pu = $line->pa_ht;
@@ -661,6 +699,20 @@ class pdf_analyse_phase extends ModelePDFPropales
 		
 	
 
+											//guits debug
+											//$arr = get_defined_vars(); //affiche toutes les variables
+											ob_start(); 
+
+											var_export($TD_Analyse); 
+
+											$tab_debug=ob_get_contents(); 
+											ob_end_clean(); 
+											$fichier=fopen('testanalyse_phase_analyse.log','w'); 
+											fwrite($fichier,$tab_debug); 
+											fclose($fichier); 
+											//guits debug fin
+	 
+	
 
 
 //suite jean	
@@ -901,6 +953,7 @@ class pdf_analyse_phase extends ModelePDFPropales
 						$tab_top = $tab_top - 60;
 	 
 	 
+	 
 	  ////affichage phase// New page
 	  
 	  $pdf->AddPage();
@@ -919,6 +972,10 @@ class pdf_analyse_phase extends ModelePDFPropales
 					$myhtml.="</head>";
 					$myhtml.="<html>";
 					$myhtml.="<body>";
+						
+						
+						
+						
 						
 						while ($lecture_phase <= $nbphase)
 						{	
@@ -988,6 +1045,35 @@ class pdf_analyse_phase extends ModelePDFPropales
 					}
 					
 					
+					//Tableaux mo par phase
+					$lecture_phase = 1;
+					while ($lecture_phase <= $nbphase)
+					{	
+						
+						$myhtml.="<p><b>Liste MO phase ".$lecture_phase."</b></p>";
+						$myhtml.="<p><b>".$TD_Analyse['TD_Phase'][$lecture_phase]['Titre']."</b></p>";
+						$myhtml.="<TABLE>";
+						$myhtml.="<TR><TD style='background-color:red'>Descriptions</TD><TD>Qantités</TD>";
+						$myhtml.="</TR>";
+						$produits = $TD_Analyse['TD_Phase'][$lecture_phase]['mo'];
+						
+						//$array_produit = array ();
+						foreach ($produits as $produit)
+						{
+							$myhtml.="<TR><TD>".$produit['label']."</TD><TD>".$produit['qte']."</TD>";
+							//$myhtml.="<TR><TD>".round($PrixDeVente, 2)."€</TD><TD>".round($Marge, 2)."€ soit ".round($TauxMarge, 1)."%</TD><TD>".round($TauxMargeBrute, 1)."</TD>";
+							$myhtml.="</TR>";
+							
+										
+							
+						}
+						$myhtml.="</TABLE>";
+				
+						$lecture_phase++;
+					}
+					
+			
+			
 					//Tableaux produits par phase
 					$lecture_phase = 1;
 					while ($lecture_phase <= $nbphase)
@@ -1007,18 +1093,7 @@ class pdf_analyse_phase extends ModelePDFPropales
 							//$myhtml.="<TR><TD>".round($PrixDeVente, 2)."€</TD><TD>".round($Marge, 2)."€ soit ".round($TauxMarge, 1)."%</TD><TD>".round($TauxMargeBrute, 1)."</TD>";
 							$myhtml.="</TR>";
 							
-											//guits debug
-											//$arr = get_defined_vars(); //affiche toutes les variables
-											ob_start(); 
-
-											var_export($produit); 
-
-											$tab_debug=ob_get_contents(); 
-											ob_end_clean(); 
-											$fichier=fopen('testanalyse_phase_analyse.log','w'); 
-											fwrite($fichier,$tab_debug); 
-											fclose($fichier); 
-											//guits debug fin
+						
 							
 						}
 						$myhtml.="</TABLE>";
@@ -1026,7 +1101,7 @@ class pdf_analyse_phase extends ModelePDFPropales
 						$lecture_phase++;
 					}
 					
-					
+			
 					
 					
 					
